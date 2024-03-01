@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'feature branch', url: 'https://github.com/prpil/mytest.git'
+                checkout([$class: 'GitSCM', branches: [[name: 'feature branch']], userRemoteConfigs: [[url: 'https://github.com/prpil/mytest.git']]])
             }
         }
         stage('Test') {

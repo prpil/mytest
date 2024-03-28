@@ -1,16 +1,44 @@
 pipeline {
     agent any
-
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('docker_cred')
+    }
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'feature-branch', credentialsId: 'b698d23c-65e4-48a1-b000-fb2fc410b195', url: 'https://github.com/prpil/mytest.git'
+                checkout scm
             }
         }
-        stage('Test') {
+
+        stage('Install Dependencies') {
             steps {
-                sh 'python test.py'
+                sh 'pip install -r requirements.txt'
             }
         }
+
+        stage('Run Tests') {
+            steps {
+                sh 'python3 manage.py test'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    dockerImage = docker.build("jobychacko/weather-app:${env.BUILD_ID}")
+                }
+            }
+        }
+        stage('Push to DockerHub') {
+            steps {
+                script {
+                    docker.withRegistry('https://registry.hub.docker.com', DOCKERHUB_CREDENTIALS) {
+                        dockerImage.push("${env.BUILD_ID}")
+                       
+                    }
+                }
+            }
+        }
+
     }
 }
